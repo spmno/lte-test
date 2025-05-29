@@ -2,27 +2,37 @@ use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
 use tracing_appender::{non_blocking, rolling::{self}};
 use tracing_subscriber::{fmt, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer};
 use log::{info, error};
+use actix_files as fs;
+use sea_orm::{Database, DatabaseConnection, EntityTrait};
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    info!("Get Hello world!");
-    HttpResponse::Ok().body("Hello world!")
+// 添加数据库模型
+mod entities {
+    use sea_orm::entity::prelude::*;
+    
+    #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
+    #[sea_orm(table_name = "locations")]
+    pub struct Model {
+        #[sea_orm(primary_key)]
+        pub id: i32,
+        pub longitude: f64,
+        pub latitude: f64,
+        pub created_at: DateTime<Utc>,
+    }
 }
+
 
 #[post("/position")]
 async fn position(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+    info!("{}", req_body);
+    HttpResponse::Ok().body("ok")
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
-}
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     //start log
     let file_appender = rolling::daily("logs", "lte_test.log");
-    //let file_appender = BasicRollingFileAppender::new("./logs", RollingConditionBasic::new().daily(), MAX_FILE_COUNT).unwrap();
+
     let (non_blocking_appender, _guard) = non_blocking(file_appender);
     let file_layer = fmt::layer()
         .with_ansi(false)
@@ -33,8 +43,8 @@ async fn main() -> std::io::Result<()> {
     tracing_subscriber::registry().with(console_subscriber).with(file_layer).init();
     HttpServer::new(|| {
         App::new()
-            .service(hello)
             .service(position)
+           .service(fs::Files::new("/", "./src/static").show_files_listing().index_file("index.html"))
     })
     .bind(("0.0.0.0", 8111))?
     .run()
