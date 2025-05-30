@@ -5,21 +5,6 @@ use log::{info, error};
 use actix_files as fs;
 use sea_orm::{Database, DatabaseConnection, EntityTrait};
 
-// 添加数据库模型
-mod entities {
-    use sea_orm::entity::prelude::*;
-    
-    #[derive(Clone, Debug, PartialEq, DeriveEntityModel)]
-    #[sea_orm(table_name = "locations")]
-    pub struct Model {
-        #[sea_orm(primary_key)]
-        pub id: i32,
-        pub longitude: f64,
-        pub latitude: f64,
-        pub created_at: DateTime<Utc>,
-    }
-}
-
 
 #[post("/position")]
 async fn position(req_body: String) -> impl Responder {

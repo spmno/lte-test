@@ -1,32 +1,43 @@
-use sea_orm_migration::prelude::*;
+use sea_orm_migration::{prelude::*, schema::*};
 
+#[derive(DeriveMigrationName)]
 pub struct Migration;
-
-impl MigrationName for Migration {
-    fn name(&self) -> &str {
-        "create_locations_table"
-    }
-}
 
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Replace the sample below with your own migration scripts
         manager
             .create_table(
                 Table::create()
-                    .table(entities::locations::Entity)
-                    .col(ColumnDef::new(entities::locations::Id).integer().not_null().auto_increment().primary_key())
-                    .col(ColumnDef::new(entities::locations::Longitude).double().not_null())
-                    .col(ColumnDef::new(entities::locations::Latitude).double().not_null())
-                    .col(ColumnDef::new(entities::locations::CreatedAt).date_time().not_null())
+                    .table(Position::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Position::Id))
+                    .col(string(Position::SerialNumber))
+                    .col(float(Position::Latitude))
+                    .col(float(Position::Longitude))
+                    .col(string(Position::DeviceType))
+                    .col(time(Position::UploadTime))
                     .to_owned(),
             )
             .await
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Replace the sample below with your own migration scripts
         manager
-            .drop_table(Table::drop().table(entities::locations::Entity).to_owned())
+            .drop_table(Table::drop().table(Position::Table).to_owned())
             .await
     }
+}
+
+#[derive(DeriveIden)]
+enum Position {
+    Table,
+    Id,
+    SerialNumber,
+    Latitude,
+    Longitude,
+    UploadTime,
+    DeviceType,
 }
